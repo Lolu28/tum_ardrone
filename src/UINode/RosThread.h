@@ -111,6 +111,7 @@ public:
 	ControlCommand lastJoyControlSent;
 	bool lastL1Pressed;
 	bool lastR1Pressed;
+    bool lastL2Pressed;
 
 
 	// send command functions. can be called from any thread & are thread-safe.

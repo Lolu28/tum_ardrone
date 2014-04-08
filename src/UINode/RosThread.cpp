@@ -35,7 +35,8 @@ RosThread::RosThread()
 	navdataCount = velCount = dronePoseCount = joyCount = velCount100ms = 0;
 	keepRunning = true;
 	lastJoyControlSent = ControlCommand(0,0,0,0);
-	lastL1Pressed = lastR1Pressed = false;
+    lastL1Pressed = lastR1Pressed = false;
+    lastL2Pressed = false;
 }
 
 RosThread::~RosThread(void)
@@ -130,8 +131,12 @@ void RosThread::joyCb(const sensor_msgs::JoyConstPtr joy_msg)
 		c.roll = -joy_msg->axes[0];
 		c.pitch = -joy_msg->axes[1];
 
-		sendControlToDrone(c);
-		lastJoyControlSent = c;
+
+        if(!joy_msg->buttons.at(actiavte_index - 3))
+        {
+            sendControlToDrone(c);
+            lastJoyControlSent = c;
+        }
 
         if(!lastL1Pressed && joy_msg->buttons.at(actiavte_index - 1))
 			sendTakeoff();
@@ -144,6 +149,8 @@ void RosThread::joyCb(const sensor_msgs::JoyConstPtr joy_msg)
 	}
     lastL1Pressed =joy_msg->buttons.at(actiavte_index - 1);
     lastR1Pressed = joy_msg->buttons.at(actiavte_index);
+    lastL2Pressed = joy_msg->buttons.at(actiavte_index - 3);
+
 }
 
 
