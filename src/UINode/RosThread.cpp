@@ -145,6 +145,11 @@ void RosThread::joyCb(const sensor_msgs::JoyConstPtr joy_msg)
 
         if(!lastR1Pressed && joy_msg->buttons.at(actiavte_index))
 			sendToggleState();
+        if(joy_msg->buttons[0])
+        {
+            sendAnimation(18, 0);
+        }
+
 
 	}
     lastL1Pressed =joy_msg->buttons.at(actiavte_index - 1);
@@ -152,6 +157,17 @@ void RosThread::joyCb(const sensor_msgs::JoyConstPtr joy_msg)
     lastL2Pressed = joy_msg->buttons.at(actiavte_index - 3);
 
 }
+
+
+void RosThread::sendAnimation(int _type, uint32_t _duration)
+{
+    pthread_mutex_lock(&send_CS);
+    animation_srv_srvs.request.duration = _duration;
+    animation_srv_srvs.request.type = _type;
+    animation_srv.call(animation_srv_srvs);
+    pthread_mutex_unlock(&send_CS);
+}
+
 
 
 void RosThread::comCb(const std_msgs::StringConstPtr str)
@@ -194,6 +210,7 @@ void RosThread::run()
 
     toggleCam_srv        = nh_.serviceClient<std_srvs::Empty>(nh_.resolveName("ardrone/togglecam"),1);
     flattrim_srv         = nh_.serviceClient<std_srvs::Empty>(nh_.resolveName("ardrone/flattrim"),1);
+    animation_srv         = nh_.serviceClient<ardrone_autonomy::FlightAnim>(nh_.resolveName("/ardrone/setflightanimation"),1);
 
 	ros::Time last = ros::Time::now();
 	ros::Time lastHz = ros::Time::now();
