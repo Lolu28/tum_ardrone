@@ -33,6 +33,18 @@
 #include "std_srvs/Empty.h"
 #include "std_msgs/Empty.h"
 
+#include "ardrone_autonomy/FlightAnim.h"
+
+enum Animation_Type
+{
+    ARDRONE_ANIM_PHI_M30_DEG, ARDRONE_ANIM_PHI_30_DEG, ARDRONE_ANIM_THETA_M30_DEG, ARDRONE_ANIM_THETA_30_DEG,
+    ARDRONE_ANIM_THETA_20DEG_YAW_200DEG, ARDRONE_ANIM_THETA_20DEG_YAW_M200DEG, ARDRONE_ANIM_TURNAROUND,
+    ARDRONE_ANIM_TURNAROUND_GODOWN, ARDRONE_ANIM_YAW_SHAKE, ARDRONE_ANIM_YAW_DANCE, ARDRONE_ANIM_PHI_DANCE,
+    ARDRONE_ANIM_THETA_DANCE, ARDRONE_ANIM_VZ_DANCE, ARDRONE_ANIM_WAVE, ARDRONE_ANIM_PHI_THETA_MIXED,
+    ARDRONE_ANIM_DOUBLE_PHI_THETA_MIXED, ARDRONE_ANIM_FLIP_AHEAD, ARDRONE_ANIM_FLIP_BEHIND, ARDRONE_ANIM_FLIP_LEFT,
+    ARDRONE_ANIM_FLIP_RIGHT
+};
+
 class tum_ardrone_gui;
 
 struct ControlCommand
@@ -75,6 +87,8 @@ private:
 	ros::Subscriber takeoff_sub;
 	ros::Subscriber land_sub;
 	ros::Subscriber toggleState_sub;
+    ros::ServiceClient animation_srv;
+    ardrone_autonomy::FlightAnim animation_srv_srvs;
 
 
 	ros::NodeHandle nh_;
@@ -111,6 +125,7 @@ public:
 	ControlCommand lastJoyControlSent;
 	bool lastL1Pressed;
 	bool lastR1Pressed;
+    bool lastL2Pressed;
 
 
 	// send command functions. can be called from any thread & are thread-safe.
@@ -123,6 +138,8 @@ public:
 	void sendToggleState();
 	void sendToggleCam();
 	void sendFlattrim();
+    void sendAnimation(int _type, uint32_t _duration);
+
 };
 
 #endif /* __ROSTHREAD_H */
