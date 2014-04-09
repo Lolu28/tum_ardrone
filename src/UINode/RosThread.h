@@ -32,6 +32,7 @@
 #include "sensor_msgs/Joy.h"
 #include "std_srvs/Empty.h"
 #include "std_msgs/Empty.h"
+#include "nav_msgs/Odometry.h"
 
 #include "ardrone_autonomy/FlightAnim.h"
 
@@ -89,6 +90,10 @@ private:
 	ros::Subscriber toggleState_sub;
     ros::ServiceClient animation_srv;
     ardrone_autonomy::FlightAnim animation_srv_srvs;
+
+    nav_msgs::Odometry odometry;
+    ros::Publisher odometry_pub;
+    void sendOdometry(const ardrone_autonomy::NavdataConstPtr navdataPtr);
 
 
 	ros::NodeHandle nh_;
