@@ -19,3 +19,14 @@ tum_ardrone GUI:
 * Clear and Send
 
 for Joystick take over: move any stick, control with sticks, press Button L1 for landing
+
+
+JOYSTICK CONTROL:
+
+Press and hold L1 to take off and keep flying.
+Release L1 to land
+Press R1 to turn the motors off (lands immediatelly - DANGEROUS FOR THE DRONE, DO IT ONLY IN CASE OF EMERGENCY)
+Press X to do the flip (DANGEROUS, make sure there is enough space)
+Left stick - control in x and y directions
+Right stick - control altitude and yaw
+
