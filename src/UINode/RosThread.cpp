@@ -99,11 +99,15 @@ void RosThread::navdataCb(const ardrone_autonomy::NavdataConstPtr navdataPtr)
 }
 
 void RosThread::sendOdometry(const ardrone_autonomy::NavdataConstPtr navdataPtr) {
-  if (!odometry.header.stamp.isValid()) {
+  if (odometry.header.stamp.isZero()) {
     odometry.header.stamp = navdataPtr->header.stamp;
+    odometry.pose.pose.position.x = odometry.pose.pose.position.y = 0;
+    odometry.pose.pose.orientation = tf::createQuaternionMsgFromYaw(0);
     return;
   }
   double dt = (navdataPtr->header.stamp - odometry.header.stamp).toSec();
+  if (dt <= 0)
+	  return;
   double vx = navdataPtr->vx / 1000;
   double vy = navdataPtr->vy / 1000;
   double z = (double)navdataPtr->altd / 1000;
@@ -116,13 +120,14 @@ void RosThread::sendOdometry(const ardrone_autonomy::NavdataConstPtr navdataPtr)
   tf::Transform new_odo_2d = last_odo_2d * increment_2d;
 
   odometry.header = navdataPtr->header;
+  odometry.header.frame_id = "/world";
   odometry.child_frame_id = "/ardrone/base_link";
   odometry.pose.pose.position.x = new_odo_2d.getOrigin().getX();
   odometry.pose.pose.position.y = new_odo_2d.getOrigin().getY();
   odometry.pose.pose.position.z = z;
   odometry.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll, pitch, yaw);
   pthread_mutex_lock(&send_CS);
-  vel_pub.publish(odometry);
+  odometry_pub.publish(odometry);
   pthread_mutex_unlock(&send_CS);
 }
 
@@ -221,6 +226,9 @@ void RosThread::run()
 {
 	std::cout << "Starting ROS Thread" << std::endl;
 
+    odometry.header.stamp = ros::Time(0); // invalid
+    odometry_pub    = nh_.advertise<nav_msgs::Odometry>(nh_.resolveName("ardrone/odometry"),1);
+
     vel_pub	   = nh_.advertise<geometry_msgs::Twist>(nh_.resolveName("cmd_vel"),1);
     vel_sub	   = nh_.subscribe(nh_.resolveName("cmd_vel"),50, &RosThread::velCb, this);
 
@@ -243,8 +251,6 @@ void RosThread::run()
     toggleCam_srv        = nh_.serviceClient<std_srvs::Empty>(nh_.resolveName("ardrone/togglecam"),1);
     flattrim_srv         = nh_.serviceClient<std_srvs::Empty>(nh_.resolveName("ardrone/flattrim"),1);
     animation_srv         = nh_.serviceClient<ardrone_autonomy::FlightAnim>(nh_.resolveName("/ardrone/setflightanimation"),1);
-
-    odometry_pub    = nh_.advertise<nav_msgs::Odometry>(nh_.resolveName("ardrone/odometry"),1);
 
 	ros::Time last = ros::Time::now();
 	ros::Time lastHz = ros::Time::now();
