@@ -1,0 +1,21 @@
+* power on AR.Drone
+* wait a few seconds (until AR.Drone is internally initialized)
+* Connect WiFi to Pavarotti
+
+For demo without PTAM:
+
+roslaunch tum_ardrone drone.launch
+rosrun rviz rviz
+
+
+For demo with PTAM:
+
+roslaunch tum_ardrone drone_ptam.launch
+
+tum_ardrone GUI:
+* Load File: initDemo.txt
+* FlatTrim
+* Control Source: Autopilot
+* Clear and Send
+
+for Joystick take over: move any stick, control with sticks, press Button L1 for landing
