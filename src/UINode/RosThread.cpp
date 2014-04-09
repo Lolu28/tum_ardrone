@@ -145,7 +145,7 @@ void RosThread::joyCb(const sensor_msgs::JoyConstPtr joy_msg)
 
         if(!lastR1Pressed && joy_msg->buttons.at(actiavte_index))
 			sendToggleState();
-        if(joy_msg->buttons[0])
+        if(joy_msg->buttons[14])
         {
             sendAnimation(18, 0);
         }
