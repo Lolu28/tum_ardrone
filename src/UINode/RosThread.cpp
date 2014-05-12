@@ -26,6 +26,8 @@
 #include "tum_ardrone_gui.h"
 #include "stdio.h"
 #include "std_msgs/Empty.h"
+#include "nav_msgs/Odometry.h"
+#include "tf/transform_datatypes.h"
 
 
 pthread_mutex_t RosThread::send_CS = PTHREAD_MUTEX_INITIALIZER;
@@ -81,6 +83,7 @@ void RosThread::velCb(const geometry_msgs::TwistConstPtr vel)
 }
 void RosThread::navdataCb(const ardrone_autonomy::NavdataConstPtr navdataPtr)
 {
+  sendOdometry(navdataPtr);
 
 	if(navdataCount%10==0)
 	{
@@ -94,6 +97,40 @@ void RosThread::navdataCb(const ardrone_autonomy::NavdataConstPtr navdataPtr)
 	}
 	navdataCount++;
 }
+
+void RosThread::sendOdometry(const ardrone_autonomy::NavdataConstPtr navdataPtr) {
+  if (odometry.header.stamp.isZero()) {
+    odometry.header.stamp = navdataPtr->header.stamp;
+    odometry.pose.pose.position.x = odometry.pose.pose.position.y = 0;
+    odometry.pose.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+    return;
+  }
+  double dt = (navdataPtr->header.stamp - odometry.header.stamp).toSec();
+  if (dt <= 0)
+	  return;
+  double vx = navdataPtr->vx / 1000;
+  double vy = navdataPtr->vy / 1000;
+  double z = (double)navdataPtr->altd / 1000;
+  double roll = navdataPtr->rotX / (180.0 / M_PI);
+  double pitch = navdataPtr->rotY / (180.0 / M_PI);
+  double yaw = navdataPtr->rotZ / (180.0 / M_PI);
+
+  tf::Transform last_odo_2d(tf::createQuaternionFromRPY(0, 0, tf::getYaw(odometry.pose.pose.orientation)), tf::Vector3(odometry.pose.pose.position.x, odometry.pose.pose.position.y, 0));
+  tf::Transform increment_2d(tf::createIdentityQuaternion(), tf::Vector3(vx*dt, vy*dt, 0));
+  tf::Transform new_odo_2d = last_odo_2d * increment_2d;
+
+  odometry.header = navdataPtr->header;
+  odometry.header.frame_id = "/world";
+  odometry.child_frame_id = "/ardrone/base_link";
+  odometry.pose.pose.position.x = new_odo_2d.getOrigin().getX();
+  odometry.pose.pose.position.y = new_odo_2d.getOrigin().getY();
+  odometry.pose.pose.position.z = z;
+  odometry.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll, pitch, yaw);
+  pthread_mutex_lock(&send_CS);
+  odometry_pub.publish(odometry);
+  pthread_mutex_unlock(&send_CS);
+}
+
 
 void RosThread::joyCb(const sensor_msgs::JoyConstPtr joy_msg)
 {
@@ -145,7 +182,7 @@ void RosThread::joyCb(const sensor_msgs::JoyConstPtr joy_msg)
 
         if(!lastR1Pressed && joy_msg->buttons.at(actiavte_index))
 			sendToggleState();
-        if(joy_msg->buttons[0])
+        if(joy_msg->buttons[14])
         {
             sendAnimation(18, 0);
         }
@@ -188,6 +225,9 @@ void RosThread::comCb(const std_msgs::StringConstPtr str)
 void RosThread::run()
 {
 	std::cout << "Starting ROS Thread" << std::endl;
+
+    odometry.header.stamp = ros::Time(0); // invalid
+    odometry_pub    = nh_.advertise<nav_msgs::Odometry>(nh_.resolveName("ardrone/odometry"),1);
 
     vel_pub	   = nh_.advertise<geometry_msgs::Twist>(nh_.resolveName("cmd_vel"),1);
     vel_sub	   = nh_.subscribe(nh_.resolveName("cmd_vel"),50, &RosThread::velCb, this);
