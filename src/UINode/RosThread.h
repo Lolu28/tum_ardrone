@@ -97,6 +97,7 @@ private:
 
 
 	ros::NodeHandle nh_;
+  ros::NodeHandle pnh_;
 
 	// counters for Hz
 	unsigned int dronePoseCount;
@@ -104,6 +105,7 @@ private:
 	unsigned int navdataCount;
 	unsigned int joyCount;
 	unsigned int velCount100ms;
+  int disable_joy_control_button;
 
 	static pthread_mutex_t send_CS;
 public:

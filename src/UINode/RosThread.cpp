@@ -31,7 +31,7 @@
 
 
 pthread_mutex_t RosThread::send_CS = PTHREAD_MUTEX_INITIALIZER;
-RosThread::RosThread()
+RosThread::RosThread(): pnh_("~")
 {
 	gui = NULL;
 	navdataCount = velCount = dronePoseCount = joyCount = velCount100ms = 0;
@@ -168,8 +168,8 @@ void RosThread::joyCb(const sensor_msgs::JoyConstPtr joy_msg)
 		c.roll = -joy_msg->axes[0];
 		c.pitch = -joy_msg->axes[1];
 
-
-        if(!joy_msg->buttons.at(actiavte_index - 3))
+        // disable joy control
+        if(!joy_msg->buttons.at(actiavte_index - (2 + disable_joy_control_button)))
         {
             sendControlToDrone(c);
             lastJoyControlSent = c;
@@ -251,6 +251,8 @@ void RosThread::run()
     toggleCam_srv        = nh_.serviceClient<std_srvs::Empty>(nh_.resolveName("ardrone/togglecam"),1);
     flattrim_srv         = nh_.serviceClient<std_srvs::Empty>(nh_.resolveName("ardrone/flattrim"),1);
     animation_srv         = nh_.serviceClient<ardrone_autonomy::FlightAnim>(nh_.resolveName("/ardrone/setflightanimation"),1);
+
+    pnh_.param<int>("DisableJoyControlButton", disable_joy_control_button, 0);
 
 	ros::Time last = ros::Time::now();
 	ros::Time lastHz = ros::Time::now();
