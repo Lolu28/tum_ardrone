@@ -169,7 +169,7 @@ void RosThread::joyCb(const sensor_msgs::JoyConstPtr joy_msg)
 		c.pitch = -joy_msg->axes[1];
 
         // disable joy control
-        if(!joy_msg->buttons.at(actiavte_index - (2 + disable_joy_control_button)))
+        if(!joy_msg->buttons.at(actiavte_index - 3 + disable_joy_control_button))
         {
             sendControlToDrone(c);
             lastJoyControlSent = c;
